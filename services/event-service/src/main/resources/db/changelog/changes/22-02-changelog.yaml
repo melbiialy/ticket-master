@@ -1,0 +1,58 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1787432260243-1
+      author: abdelaziz26
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_seats
+                  name: id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: venue_id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: section
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: row_number
+                  type: VARCHAR(255)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: seat_number
+                  type: VARCHAR(255)
+            tableName: seats
+  - changeSet:
+      id: 1787432260243-2
+      author: abdelaziz26
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addUniqueConstraint:
+            columnNames: venue_id, section, row_number, seat_number
+            constraintName: uk_venue_seat
+            tableName: seats
+  - changeSet:
+      id: 1787432260243-3
+      author: abdelaziz26
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: venue_id
+            baseTableName: seats
+            constraintName: FK_SEATS_ON_VENUE
+            referencedColumnNames: id
+            referencedTableName: venues
+

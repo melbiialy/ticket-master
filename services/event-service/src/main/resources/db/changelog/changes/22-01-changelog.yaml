@@ -1,0 +1,57 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1787432203576-1
+      author: abdelaziz26
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_events
+                  name: id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: name
+                  type: VARCHAR(255)
+              - column:
+                  name: description
+                  type: TEXT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: venue_id
+                  type: BIGINT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: starts_at
+                  type: DATETIME
+              - column:
+                  constraints:
+                    nullable: false
+                  name: ends_at
+                  type: DATETIME
+              - column:
+                  constraints:
+                    nullable: false
+                  name: status
+                  type: VARCHAR(255)
+            tableName: events
+  - changeSet:
+      id: 1787432203576-2
+      author: abdelaziz26
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: venue_id
+            baseTableName: events
+            constraintName: FK_EVENTS_ON_VENUE
+            referencedColumnNames: id
+            referencedTableName: venues
+

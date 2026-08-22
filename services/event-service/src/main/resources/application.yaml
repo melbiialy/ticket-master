@@ -14,6 +14,9 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     show-sql: true
 
+  liquibase:
+    change-log: classpath:/db/changelog/db.changelog-master.yaml
+
 eureka:
   client:
     service-url:
