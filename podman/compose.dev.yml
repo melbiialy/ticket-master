@@ -1,0 +1,122 @@
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch-wolfi:9.4.3
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - ticket-master-net
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -s http://localhost:9200/_cluster/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: rmq-cont
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    volumes:
+      - 'rmq-data:/var/lib/rabbitmq'
+    networks:
+      - ticket-master-net
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: 1234
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4.1
+    ports:
+      - "4000:8080"
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: 1234
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres-keycloak:5432/keycloak
+      KC_DB_USERNAME: admin
+      KC_DB_PASSWORD: 1234
+    command: "start-dev"
+    networks:
+      - ticket-master-net
+    depends_on:
+      postgres-keycloak:
+        condition: service_healthy
+
+  postgres-keycloak:
+    extends:
+      file: common.yml
+      service: pg_parent
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: keycloak
+    volumes:
+      - 'keycloak-data:/var/lib/postgresql/data'
+
+  postgres-ticket-master:
+    extends:
+      file: common.yml
+      service: pg_parent
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ticket-master
+    volumes:
+      - 'ticket-master-data:/var/lib/postgresql/data'
+
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - ticket-master-net
+
+  pgAdmin:
+    image: 'dpage/pgadmin4'
+    container_name: pg_admin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=mohamecabdelaziz66@gmail.com
+      - PGADMIN_DEFAULT_PASSWORD=1234
+    ports:
+      - '5050:80'
+    depends_on:
+      postgres-ticket-master:
+        condition: service_healthy
+      postgres-keycloak:
+        condition: service_healthy
+
+    restart: always
+    networks:
+      - ticket-master-net
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:9.4.3
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - ticket-master-net
+
+volumes:
+  keycloak-data:
+  ticket-master-data:
+  rmq-data:
+  elasticsearch-data:
+
+networks:
+  ticket-master-net:
+    driver: bridge
+
