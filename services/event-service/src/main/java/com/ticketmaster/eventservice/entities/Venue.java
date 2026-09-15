@@ -27,6 +27,9 @@ public class Venue {
 
     private String address;
 
+    @Column(nullable = false)
+    private Integer capacity;
+
     @OneToMany(mappedBy = "venue")
     @Builder.Default
     private List<Seat> seats = new ArrayList<>();

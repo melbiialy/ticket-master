@@ -22,7 +22,7 @@ public class Result<T> {
         return new Result<T>(data, ApiError.None(""), true);
     }
 
-    public static Result<Void> Failure(ApiError error) {
-        return new Result<Void>(null, error, false);
+    public static <T> Result<T> Failure(ApiError error) {
+        return new Result<T>(null, error, false);
     }
 }
