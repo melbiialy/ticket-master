@@ -1,4 +1,9 @@
 spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:4000/realms/master
   application:
     name: api-gateway
   cloud:
@@ -9,6 +14,8 @@ spring:
             locator:
               enabled: false
               lower-case-service-id: true
+
+
 
 
 

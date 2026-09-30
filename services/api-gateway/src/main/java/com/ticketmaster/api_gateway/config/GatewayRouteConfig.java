@@ -1,5 +1,7 @@
 package com.ticketmaster.api_gateway.config;
 
+import com.ticketmaster.api_gateway.filter.UserHeaderGatewayFilterFactory;
+import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
@@ -13,11 +15,16 @@ import java.time.Duration;
 public class GatewayRouteConfig {
 
     @Bean
-    public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
+    public RouteLocator customRouteLocator(RouteLocatorBuilder builder,
+                                           UserHeaderGatewayFilterFactory userHeader) {
+
+        GatewayFilter userHeaderFilter = userHeader.apply(new Object());
+
         return builder.routes()
                 .route("search-service-route", r -> r
-                        .path("/search/**")
+                        .path(Constant.SEARCH_SERVICE)
                         .filters(f -> f.stripPrefix(1)
+                                .filter(userHeaderFilter)
                                 .circuitBreaker(c -> c
                                         .setName("searchCB")
                                         .setFallbackUri("forward:/fallback/search"))
@@ -29,8 +36,9 @@ public class GatewayRouteConfig {
                         .uri("lb://search-service"))
 
                 .route("event-service-route", r -> r
-                        .path("/event/**")
+                        .path(Constant.EVENT_SERVICE)
                         .filters(f -> f.stripPrefix(1)
+                                .filter(userHeaderFilter)
                                 .circuitBreaker(c -> c
                                         .setName("eventCB")
                                         .setFallbackUri("forward:/fallback/event"))
@@ -42,17 +50,15 @@ public class GatewayRouteConfig {
                         .uri("lb://event-service"))
 
                 .route("booking-service-route", r -> r
-                        .path("/bookings/**")
+                        .path(Constant.BOOKING_SERVICE)
                         .filters(f -> f.stripPrefix(1)
+                                .filter(userHeaderFilter)
                                 .circuitBreaker(c -> c
                                         .setName("bookingCB")
                                         .setFallbackUri("forward:/fallback/bookings"))
                                 .retry(retryConfig -> retryConfig
                                         .setRetries(2)
-                                        // GET only: status/booking lookups are safe to retry.
-                                        // POST/PUT (create/confirm booking) are deliberately
-                                        // excluded to avoid duplicate bookings on a slow
-                                        // response that actually succeeded downstream.
+                                        // GET only: POST/PUT are excluded to avoid duplicate bookings
                                         .setMethods(HttpMethod.GET)
                                         .setSeries(HttpStatus.Series.SERVER_ERROR)
                                         .setBackoff(Duration.ofMillis(300), Duration.ofMillis(1500), 2, false)))
