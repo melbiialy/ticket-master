@@ -1,7 +1,5 @@
 package com.ticketmaster.api_gateway.config;
 
-import com.ticketmaster.api_gateway.filter.UserHeaderGatewayFilterFactory;
-import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
 import org.springframework.context.annotation.Bean;
@@ -14,17 +12,14 @@ import java.time.Duration;
 @Configuration
 public class GatewayRouteConfig {
 
-    @Bean
-    public RouteLocator customRouteLocator(RouteLocatorBuilder builder,
-                                           UserHeaderGatewayFilterFactory userHeader) {
 
-        GatewayFilter userHeaderFilter = userHeader.apply(new Object());
+    @Bean
+    public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
 
         return builder.routes()
                 .route("search-service-route", r -> r
                         .path(Constant.SEARCH_SERVICE)
                         .filters(f -> f.stripPrefix(1)
-                                .filter(userHeaderFilter)
                                 .circuitBreaker(c -> c
                                         .setName("searchCB")
                                         .setFallbackUri("forward:/fallback/search"))
@@ -38,7 +33,6 @@ public class GatewayRouteConfig {
                 .route("event-service-route", r -> r
                         .path(Constant.EVENT_SERVICE)
                         .filters(f -> f.stripPrefix(1)
-                                .filter(userHeaderFilter)
                                 .circuitBreaker(c -> c
                                         .setName("eventCB")
                                         .setFallbackUri("forward:/fallback/event"))
@@ -52,7 +46,6 @@ public class GatewayRouteConfig {
                 .route("booking-service-route", r -> r
                         .path(Constant.BOOKING_SERVICE)
                         .filters(f -> f.stripPrefix(1)
-                                .filter(userHeaderFilter)
                                 .circuitBreaker(c -> c
                                         .setName("bookingCB")
                                         .setFallbackUri("forward:/fallback/bookings"))
