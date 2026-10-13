@@ -12,11 +12,13 @@ import java.time.Duration;
 @Configuration
 public class GatewayRouteConfig {
 
+
     @Bean
     public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
+
         return builder.routes()
                 .route("search-service-route", r -> r
-                        .path("/search/**")
+                        .path(Constant.SEARCH_SERVICE)
                         .filters(f -> f.stripPrefix(1)
                                 .circuitBreaker(c -> c
                                         .setName("searchCB")
@@ -29,7 +31,7 @@ public class GatewayRouteConfig {
                         .uri("lb://search-service"))
 
                 .route("event-service-route", r -> r
-                        .path("/event/**")
+                        .path(Constant.EVENT_SERVICE)
                         .filters(f -> f.stripPrefix(1)
                                 .circuitBreaker(c -> c
                                         .setName("eventCB")
@@ -42,17 +44,14 @@ public class GatewayRouteConfig {
                         .uri("lb://event-service"))
 
                 .route("booking-service-route", r -> r
-                        .path("/bookings/**")
+                        .path(Constant.BOOKING_SERVICE)
                         .filters(f -> f.stripPrefix(1)
                                 .circuitBreaker(c -> c
                                         .setName("bookingCB")
                                         .setFallbackUri("forward:/fallback/bookings"))
                                 .retry(retryConfig -> retryConfig
                                         .setRetries(2)
-                                        // GET only: status/booking lookups are safe to retry.
-                                        // POST/PUT (create/confirm booking) are deliberately
-                                        // excluded to avoid duplicate bookings on a slow
-                                        // response that actually succeeded downstream.
+                                        // GET only: POST/PUT are excluded to avoid duplicate bookings
                                         .setMethods(HttpMethod.GET)
                                         .setSeries(HttpStatus.Series.SERVER_ERROR)
                                         .setBackoff(Duration.ofMillis(300), Duration.ofMillis(1500), 2, false)))
